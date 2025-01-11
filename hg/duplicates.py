@@ -40,7 +40,7 @@ Removed block starting at line 5 with length 3:
 
 """
 
-
+from typing import Callable, Optional, Tuple, List, Dict
 from collections import defaultdict
 
 
@@ -228,7 +228,9 @@ class BlockDeduplicator:
         return deduped_sequence, removed_blocks
 
 
-def deduplicate_string_lines(text, min_block_size=5, key=hash):
+def deduplicate_string_lines(
+    text: str, min_block_size: int = 5, key: Optional[Callable] = hash
+) -> Tuple[str, List[Dict]]:
     """
     Example function demonstrating how to use the generic BlockDeduplicator
     on a string by splitting it into lines. Returns:
@@ -245,4 +247,3 @@ def deduplicate_string_lines(text, min_block_size=5, key=hash):
     deduped_lines, removed_blocks = deduplicator.deduplicate_sequence(lines)
     final_text = "\n".join(deduped_lines)
     return final_text, removed_blocks
-
