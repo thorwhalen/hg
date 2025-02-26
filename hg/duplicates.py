@@ -229,7 +229,7 @@ class BlockDeduplicator:
 
 
 def deduplicate_string_lines(
-    text: str, min_block_size: int = 5, key: Optional[Callable] = hash
+    text: str, min_block_size: int = 5, key: Optional[Callable] = hash, *, return_final_text: bool = True, return_removed_blocks: bool = True
 ) -> Tuple[str, List[Dict]]:
     """
     Example function demonstrating how to use the generic BlockDeduplicator
@@ -245,5 +245,11 @@ def deduplicate_string_lines(
     lines = text.splitlines()
     deduplicator = BlockDeduplicator(min_block_size=min_block_size, key=key)
     deduped_lines, removed_blocks = deduplicator.deduplicate_sequence(lines)
-    final_text = "\n".join(deduped_lines)
-    return final_text, removed_blocks
+    if return_final_text:
+        final_text = "\n".join(deduped_lines)
+        if return_removed_blocks:
+            return final_text, removed_blocks
+        else:
+            return final_text
+    elif return_removed_blocks:
+        return final_text, removed_blocks
