@@ -107,7 +107,7 @@ class FPTree(object):
     items must be valid as dictionary keys or set members).
     """
 
-    Route = namedtuple('Route', 'head tail')
+    Route = namedtuple("Route", "head tail")
 
     def __init__(self):
         # The root node of the tree.
@@ -198,15 +198,15 @@ class FPTree(object):
         return (collect_path(node) for node in self.nodes(item))
 
     def inspect(self):
-        print('Tree:')
+        print("Tree:")
         self.root.inspect(1)
 
         print()
-        print('Routes:')
+        print("Routes:")
         for item, nodes in list(self.items()):
-            print('  %r' % item)
+            print("  %r" % item)
             for node in nodes:
-                print('    %r' % node)
+                print("    %r" % node)
 
     def _removed(self, node):
         """Called when `node` is removed from the tree; performs cleanup."""
@@ -297,7 +297,7 @@ class FPNode(object):
         """Adds the given FPNode `child` as a child of this node."""
 
         if not isinstance(child, FPNode):
-            raise TypeError('Can only add other FPNodes as children')
+            raise TypeError("Can only add other FPNodes as children")
 
         if not child.item in self._children:
             self._children[child.item] = child
@@ -333,9 +333,9 @@ class FPNode(object):
                         self.add(sub_child)
                 child._children = {}
             else:
-                raise ValueError('that node is not a child of this node')
+                raise ValueError("that node is not a child of this node")
         except KeyError:
-            raise ValueError('that node is not a child of this node')
+            raise ValueError("that node is not a child of this node")
 
     def __contains__(self, item):
         return item in self._children
@@ -363,13 +363,13 @@ class FPNode(object):
     def increment_count(self):
         """Increments the count associated with this node's item."""
         if self._count is None:
-            raise ValueError('Root nodes have no associated count.')
+            raise ValueError("Root nodes have no associated count.")
         self._count += 1
 
     def increment_value(self, value_to_add=1.0):
         """Increments the count associated with this node's item."""
         if self._value is None:
-            raise ValueError('Root nodes have no associated value.')
+            raise ValueError("Root nodes have no associated value.")
         self._value += value_to_add
 
     @property
@@ -390,9 +390,9 @@ class FPNode(object):
 
         def fset(self, value):
             if value is not None and not isinstance(value, FPNode):
-                raise TypeError('A node must have an FPNode as a parent.')
+                raise TypeError("A node must have an FPNode as a parent.")
             if value and value.tree is not self.tree:
-                raise ValueError('Cannot have a parent from another tree.')
+                raise ValueError("Cannot have a parent from another tree.")
             self._parent = value
 
         return locals()
@@ -400,19 +400,19 @@ class FPNode(object):
     parent = property(**parent())
 
     def neighbor():
-        doc = '''
+        doc = """
         The node's neighbor; the one with the same value that is "to the right"
         of it in the tree.
-        '''
+        """
 
         def fget(self):
             return self._neighbor
 
         def fset(self, value):
             if value is not None and not isinstance(value, FPNode):
-                raise TypeError('A node must have an FPNode as a neighbor.')
+                raise TypeError("A node must have an FPNode as a neighbor.")
             if value and value.tree is not self.tree:
-                raise ValueError('Cannot have a neighbor from another tree.')
+                raise ValueError("Cannot have a neighbor from another tree.")
             self._neighbor = value
 
         return locals()
@@ -425,14 +425,14 @@ class FPNode(object):
         return tuple(self._children.values())
 
     def inspect(self, depth=0):
-        print(('  ' * depth) + repr(self))
+        print(("  " * depth) + repr(self))
         for child in self.children:
             child.inspect(depth + 1)
 
     def __repr__(self):
         if self.root:
-            return '<%s (root)>' % type(self).__name__
-        return '<%s %r count=%r, value=%r>' % (
+            return "<%s (root)>" % type(self).__name__
+        return "<%s %r count=%r, value=%r>" % (
             type(self).__name__,
             self.item,
             self.count,

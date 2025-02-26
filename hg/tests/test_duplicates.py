@@ -20,8 +20,8 @@ def test_blockdeduplicator_on_integers():
 
     # Check removed blocks details
     assert len(removed) == 1
-    assert removed[0]['length'] == 3
-    assert removed[0]['block_items'] == [1, 2, 3]
+    assert removed[0]["length"] == 3
+    assert removed[0]["block_items"] == [1, 2, 3]
 
 
 def test_deduplicate_string_lines():
@@ -40,5 +40,5 @@ LineD
 
     assert final_text == "LineA\nLineB\nLineC\nLineD"
     assert len(removed_blocks) == 1
-    assert removed_blocks[0]['length'] == 3
-    assert removed_blocks[0]['block_items'] == ["LineA", "LineB", "LineC"]
+    assert removed_blocks[0]["length"] == 3
+    assert removed_blocks[0]["block_items"] == ["LineA", "LineB", "LineC"]

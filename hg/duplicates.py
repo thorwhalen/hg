@@ -161,14 +161,14 @@ class BlockDeduplicator:
             block_items = sequence[first_start : first_start + current_size]
             results.append(
                 {
-                    'start_indices': group_indices,
-                    'length': current_size,
-                    'block_items': block_items,
+                    "start_indices": group_indices,
+                    "length": current_size,
+                    "block_items": block_items,
                 }
             )
 
         # Sort by largest length first
-        results.sort(key=lambda r: r['length'], reverse=True)
+        results.sort(key=lambda r: r["length"], reverse=True)
         return results
 
     def deduplicate_sequence(self, sequence):
@@ -198,8 +198,8 @@ class BlockDeduplicator:
 
         # Remove duplicates in descending block size order
         for info in duplicates_info:
-            length = info['length']
-            starts = sorted(info['start_indices'])  # ascending for consistency
+            length = info["length"]
+            starts = sorted(info["start_indices"])  # ascending for consistency
 
             # Keep the first occurrence, remove subsequent ones
             first_start = starts[0]
@@ -215,9 +215,9 @@ class BlockDeduplicator:
                         removed_indices.add(idx)
                     removed_blocks.append(
                         {
-                            'removed_start': other_start,
-                            'length': length,
-                            'block_items': info['block_items'],
+                            "removed_start": other_start,
+                            "length": length,
+                            "block_items": info["block_items"],
                         }
                     )
 
@@ -229,7 +229,12 @@ class BlockDeduplicator:
 
 
 def deduplicate_string_lines(
-    text: str, min_block_size: int = 5, key: Optional[Callable] = hash, *, return_final_text: bool = True, return_removed_blocks: bool = True
+    text: str,
+    min_block_size: int = 5,
+    key: Optional[Callable] = hash,
+    *,
+    return_final_text: bool = True,
+    return_removed_blocks: bool = True
 ) -> Tuple[str, List[Dict]]:
     """
     Example function demonstrating how to use the generic BlockDeduplicator
