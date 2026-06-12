@@ -63,7 +63,9 @@ class BlockDeduplicator:
 
     """
 
-    def __init__(self, *, min_block_size: int = DFLT_MIN_BLOCK_SIZE, key: Callable | None = None):
+    def __init__(
+        self, *, min_block_size: int = DFLT_MIN_BLOCK_SIZE, key: Callable | None = None
+    ):
         """
         :param min_block_size:  The size (of the sequence) for initial block match.
         :param key:             A function that maps each item to a
