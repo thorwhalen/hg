@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hg.duplicates &mdash; hg 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="hg.frequent_itemsets" href="frequent_itemsets.html" />
+    <link rel="prev" title="hg" href="../hg.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            hg
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../hg.html">hg</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">hg.duplicates</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#hg.duplicates.BlockDeduplicator"><code class="docutils literal notranslate"><span class="pre">BlockDeduplicator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hg.duplicates.BlockDeduplicator.deduplicate_sequence"><code class="docutils literal notranslate"><span class="pre">BlockDeduplicator.deduplicate_sequence()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#hg.duplicates.RemovedBlock"><code class="docutils literal notranslate"><span class="pre">RemovedBlock</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hg.duplicates.deduplicate_sequence"><code class="docutils literal notranslate"><span class="pre">deduplicate_sequence()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hg.duplicates.deduplicate_string_lines"><code class="docutils literal notranslate"><span class="pre">deduplicate_string_lines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frequent_itemsets.html">hg.frequent_itemsets</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">hg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hg.duplicates</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/hg/duplicates.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hg.duplicates">
+<span id="hg-duplicates"></span><h1>hg.duplicates<a class="headerlink" href="#module-hg.duplicates" title="Link to this heading"></a></h1>
+<p>Duplicate detection and handling — find and remove the largest repeated
+contiguous blocks in an ordered sequence.</p>
+<p>Simple entry points (progressive disclosure — the common cases are one call):</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#hg.duplicates.deduplicate_string_lines" title="hg.duplicates.deduplicate_string_lines"><code class="xref py py-func docutils literal notranslate"><span class="pre">deduplicate_string_lines()</span></code></a> — de-duplicate repeated line-blocks in text.</p></li>
+<li><p><a class="reference internal" href="#hg.duplicates.deduplicate_sequence" title="hg.duplicates.deduplicate_sequence"><code class="xref py py-func docutils literal notranslate"><span class="pre">deduplicate_sequence()</span></code></a> — the same for any indexable sequence of items.</p></li>
+<li><p><a class="reference internal" href="#hg.duplicates.BlockDeduplicator" title="hg.duplicates.BlockDeduplicator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BlockDeduplicator</span></code></a> — the reusable, configurable form behind both.</p></li>
+</ul>
+<p>A “block” is a maximal run of consecutive items that occurs more than once; the
+first occurrence is kept and later ones are removed.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;A</span><span class="se">\n</span><span class="s2">B</span><span class="se">\n</span><span class="s2">A</span><span class="se">\n</span><span class="s2">B</span><span class="se">\n</span><span class="s2">C&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">final_text</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">deduplicate_string_lines</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">min_block_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">final_text</span><span class="p">)</span>
+<span class="go">A</span>
+<span class="go">B</span>
+<span class="go">C</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">removed</span>
+<span class="go">[RemovedBlock(removed_start=2, length=2, block_items=[&#39;A&#39;, &#39;B&#39;])]</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="hg.duplicates.BlockDeduplicator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hg.duplicates.</span></span><span class="sig-name descname"><span class="pre">BlockDeduplicator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hg/duplicates.html#BlockDeduplicator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hg.duplicates.BlockDeduplicator" title="Link to this definition"></a></dt>
+<dd><p>A generic tool that finds repeated blocks in a sequence of items,
+then removes duplicate occurrences (retaining the first occurrence).
+It uses an initial block size for detection and extends the blocks
+to find the largest repeated sequences.</p>
+<p>Example of usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dedup</span> <span class="o">=</span> <span class="n">BlockDeduplicator</span><span class="p">(</span><span class="n">min_block_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">dedup</span><span class="o">.</span><span class="n">deduplicate_sequence</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span>
+<span class="go">[10, 20, 30]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">removed</span>
+<span class="go">[RemovedBlock(removed_start=2, length=2, block_items=[10, 20])]</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="hg.duplicates.BlockDeduplicator.deduplicate_sequence">
+<span class="sig-name descname"><span class="pre">deduplicate_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hg/duplicates.html#BlockDeduplicator.deduplicate_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hg.duplicates.BlockDeduplicator.deduplicate_sequence" title="Link to this definition"></a></dt>
+<dd><p>Detect largest duplicate blocks, then remove the second
+and subsequent occurrences of each block from ‘sequence’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sequence</strong> – A list (or other indexable container) of items.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><code class="docutils literal notranslate"><span class="pre">(deduped_sequence,</span> <span class="pre">removed_blocks)</span></code>
+- deduped_sequence: final list of items after removing duplicates
+- removed_blocks: list of <a class="reference internal" href="#hg.duplicates.RemovedBlock" title="hg.duplicates.RemovedBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">RemovedBlock</span></code></a> with the details of</p>
+<blockquote>
+<div><p>each removed occurrence</p>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dedup</span> <span class="o">=</span> <span class="n">BlockDeduplicator</span><span class="p">(</span><span class="n">min_block_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">dedup</span><span class="o">.</span><span class="n">deduplicate_sequence</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">]</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span>
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">removed</span>
+<span class="go">[RemovedBlock(removed_start=2, length=2, block_items=[&#39;A&#39;, &#39;B&#39;])]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hg.duplicates.RemovedBlock">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">hg.duplicates.</span></span><span class="sig-name descname"><span class="pre">RemovedBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">removed_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_items</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hg/duplicates.html#RemovedBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hg.duplicates.RemovedBlock" title="Link to this definition"></a></dt>
+<dd><p>A contiguous block that was removed as a duplicate.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">removed_start</span></code>: index (in the original sequence) where the removed
+occurrence began.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">length</span></code>: number of items in the block.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block_items</span></code>: the actual items of the block (taken from the first,
+retained, occurrence).</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hg.duplicates.deduplicate_sequence">
+<span class="sig-prename descclassname"><span class="pre">hg.duplicates.</span></span><span class="sig-name descname"><span class="pre">deduplicate_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hg/duplicates.html#deduplicate_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hg.duplicates.deduplicate_sequence" title="Link to this definition"></a></dt>
+<dd><p>Functional facade over <a class="reference internal" href="#hg.duplicates.BlockDeduplicator" title="hg.duplicates.BlockDeduplicator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BlockDeduplicator</span></code></a>: remove the largest
+repeated contiguous blocks from <code class="docutils literal notranslate"><span class="pre">sequence</span></code>, keeping the first occurrence.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">(deduped_sequence,</span> <span class="pre">removed_blocks)</span></code> where <code class="docutils literal notranslate"><span class="pre">removed_blocks</span></code> is a
+list of <a class="reference internal" href="#hg.duplicates.RemovedBlock" title="hg.duplicates.RemovedBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">RemovedBlock</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">deduplicate_sequence</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">min_block_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span>
+<span class="go">[1, 2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">removed</span>
+<span class="go">[RemovedBlock(removed_start=2, length=2, block_items=[1, 2])]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hg.duplicates.deduplicate_string_lines">
+<span class="sig-prename descclassname"><span class="pre">hg.duplicates.</span></span><span class="sig-name descname"><span class="pre">deduplicate_string_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;built-in</span> <span class="pre">function</span> <span class="pre">hash&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_final_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_removed_blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hg/duplicates.html#deduplicate_string_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hg.duplicates.deduplicate_string_lines" title="Link to this definition"></a></dt>
+<dd><p>De-duplicate repeated <em>line-blocks</em> in a string by splitting it into lines,
+running <a class="reference internal" href="#hg.duplicates.deduplicate_sequence" title="hg.duplicates.deduplicate_sequence"><code class="xref py py-func docutils literal notranslate"><span class="pre">deduplicate_sequence()</span></code></a>, and re-joining.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> – The input string.</p></li>
+<li><p><strong>min_block_size</strong> – The size (in number of lines) for initial block match.</p></li>
+<li><p><strong>key</strong> – Optional key function mapping each line to a
+comparable/hashable value. Defaults to <code class="xref py py-func docutils literal notranslate"><span class="pre">hash()</span></code>
+(lines are matched by hash, which is fine for text).</p></li>
+<li><p><strong>return_final_text</strong> – Include the deduplicated text in the result.</p></li>
+<li><p><strong>return_removed_blocks</strong> – Include the list of <a class="reference internal" href="#hg.duplicates.RemovedBlock" title="hg.duplicates.RemovedBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">RemovedBlock</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>both flags true (default): <code class="docutils literal notranslate"><span class="pre">(final_text,</span> <span class="pre">removed_blocks)</span></code></p></li>
+<li><p>only <code class="docutils literal notranslate"><span class="pre">return_final_text</span></code>: <code class="docutils literal notranslate"><span class="pre">final_text</span></code></p></li>
+<li><p>only <code class="docutils literal notranslate"><span class="pre">return_removed_blocks</span></code>: <code class="docutils literal notranslate"><span class="pre">removed_blocks</span></code></p></li>
+<li><p>neither: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;A</span><span class="se">\n</span><span class="s2">B</span><span class="se">\n</span><span class="s2">C</span><span class="se">\n</span><span class="s2">A</span><span class="se">\n</span><span class="s2">B</span><span class="se">\n</span><span class="s2">C</span><span class="se">\n</span><span class="s2">D&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">final_text</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">deduplicate_string_lines</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">min_block_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">final_text</span><span class="p">)</span>
+<span class="go">A</span>
+<span class="go">B</span>
+<span class="go">C</span>
+<span class="go">D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">removed</span>
+<span class="go">[RemovedBlock(removed_start=3, length=3, block_items=[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deduplicate_string_lines</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">min_block_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">return_removed_blocks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">&#39;A\nB\nC\nD&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../hg.html" class="btn btn-neutral float-left" title="hg" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="frequent_itemsets.html" class="btn btn-neutral float-right" title="hg.frequent_itemsets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

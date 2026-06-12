@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hg.frequent_itemsets &mdash; hg 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            hg
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/hg.html">hg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/hg/duplicates.html">hg.duplicates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/hg/frequent_itemsets.html">hg.frequent_itemsets</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">hg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">hg.frequent_itemsets</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for hg.frequent_itemsets</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Frequent-itemset mining, augmented so each transaction can carry a numeric</span>
+<span class="sd">*value* that is accumulated alongside the item *count* (support).</span>
+
+<span class="sd">This lets you mine itemsets weighted by an arbitrary per-transaction quantity</span>
+<span class="sd">(revenue, duration, ...) in addition to plain co-occurrence support. Pass no</span>
+<span class="sd">``transaction_values`` to get ordinary (count-only) frequent-itemset mining.</span>
+
+<span class="sd">The implementation is `Eclat`_ (depth-first search over item *tidlists* — the</span>
+<span class="sd">sets of transaction indices an item appears in), which is both correct and</span>
+<span class="sd">simple: an itemset&#39;s support is the size of the intersection of its items&#39;</span>
+<span class="sd">tidlists, and its accumulated value is the sum of those transactions&#39; values.</span>
+
+<span class="sd">(Earlier versions of this module vendored an FP-growth fork whose conditional</span>
+<span class="sd">tree was subtly wrong; this Eclat implementation replaces it and is verified</span>
+<span class="sd">against a brute-force reference.)</span>
+
+<span class="sd">.. _Eclat: https://en.wikipedia.org/wiki/Association_rule_learning#Eclat_algorithm</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NamedTuple</span>
+
+<span class="n">DFLT_MINIMUM_SUPPORT</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="FrequentItemset">
+<a class="viewcode-back" href="../../module_docs/hg/frequent_itemsets.html#hg.frequent_itemsets.FrequentItemset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FrequentItemset</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A frequent itemset result.</span>
+
+<span class="sd">    Tuple-unpackable as ``(items, support, value)``:</span>
+
+<span class="sd">    - ``items``: the items making up the itemset (a list).</span>
+<span class="sd">    - ``support``: number of transactions containing the itemset (the count).</span>
+<span class="sd">    - ``value``: the accumulated per-transaction value over those transactions</span>
+<span class="sd">      (equals ``support`` when no ``transaction_values`` were supplied).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">items</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">support</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+
+<div class="viewcode-block" id="find_frequent_itemsets">
+<a class="viewcode-back" href="../../module_docs/hg/frequent_itemsets.html#hg.frequent_itemsets.find_frequent_itemsets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_frequent_itemsets</span><span class="p">(</span>
+    <span class="n">transactions</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Iterable</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">transaction_values</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">minimum_support</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MINIMUM_SUPPORT</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find frequent itemsets in ``transactions``, yielded as</span>
+<span class="sd">    :class:`FrequentItemset` (``(items, support, value)``).</span>
+
+<span class="sd">    ``transactions`` is any iterable of iterables of hashable items.</span>
+<span class="sd">    ``transaction_values`` is an optional parallel sequence of numeric weights</span>
+<span class="sd">    (one per transaction); when omitted, every transaction has weight 1 so</span>
+<span class="sd">    ``value`` equals ``support`` (ordinary frequent-itemset mining).</span>
+<span class="sd">    ``minimum_support`` is the minimum number of occurrences for an itemset to</span>
+<span class="sd">    be reported.</span>
+
+<span class="sd">    &gt;&gt;&gt; transactions = [</span>
+<span class="sd">    ...     [&#39;bread&#39;, &#39;milk&#39;],</span>
+<span class="sd">    ...     [&#39;bread&#39;, &#39;milk&#39;, &#39;eggs&#39;],</span>
+<span class="sd">    ...     [&#39;milk&#39;, &#39;eggs&#39;],</span>
+<span class="sd">    ...     [&#39;bread&#39;, &#39;butter&#39;],</span>
+<span class="sd">    ... ]</span>
+<span class="sd">    &gt;&gt;&gt; for itemset in sorted(</span>
+<span class="sd">    ...     find_frequent_itemsets(transactions, minimum_support=2),</span>
+<span class="sd">    ...     key=lambda it: (-it.support, sorted(it.items)),</span>
+<span class="sd">    ... ):</span>
+<span class="sd">    ...     print(sorted(itemset.items), itemset.support)</span>
+<span class="sd">    [&#39;bread&#39;] 3</span>
+<span class="sd">    [&#39;milk&#39;] 3</span>
+<span class="sd">    [&#39;bread&#39;, &#39;milk&#39;] 2</span>
+<span class="sd">    [&#39;eggs&#39;] 2</span>
+<span class="sd">    [&#39;eggs&#39;, &#39;milk&#39;] 2</span>
+
+<span class="sd">    Pass ``transaction_values`` to weight each transaction (here by basket</span>
+<span class="sd">    price); the third field accumulates that weight over the matching</span>
+<span class="sd">    transactions:</span>
+
+<span class="sd">    &gt;&gt;&gt; prices = [4.0, 9.0, 5.0, 7.0]</span>
+<span class="sd">    &gt;&gt;&gt; by_value = {</span>
+<span class="sd">    ...     tuple(sorted(it.items)): it.value</span>
+<span class="sd">    ...     for it in find_frequent_itemsets(</span>
+<span class="sd">    ...         transactions, transaction_values=prices, minimum_support=2</span>
+<span class="sd">    ...     )</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &gt;&gt;&gt; by_value[(&#39;bread&#39;, &#39;milk&#39;)]  # baskets 0 (4.0) and 1 (9.0)</span>
+<span class="sd">    13.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">transactions</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">transactions</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">transaction_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">transaction_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">transactions</span><span class="p">)</span>
+    <span class="n">transaction_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">transaction_values</span><span class="p">)</span>
+
+    <span class="c1"># tidlists[item] = set of transaction indices in which `item` appears.</span>
+    <span class="n">tidlists</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">transaction</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">transactions</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">transaction</span><span class="p">:</span>
+            <span class="n">tidlists</span><span class="p">[</span><span class="n">item</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">value_of</span><span class="p">(</span><span class="n">tids</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">transaction_values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tids</span><span class="p">)</span>
+
+    <span class="c1"># Process items most-frequent-first (a heuristic that keeps the search</span>
+    <span class="c1"># shallow); ``repr`` breaks ties deterministically.</span>
+    <span class="n">frequent_items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">tids</span> <span class="ow">in</span> <span class="n">tidlists</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">minimum_support</span><span class="p">),</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">tidlists</span><span class="p">[</span><span class="n">item</span><span class="p">]),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">item</span><span class="p">)),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">grow</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">branch</span><span class="p">):</span>
+        <span class="c1"># `branch` is a list of (item, tidlist) all frequent given `prefix`.</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">tids</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">branch</span><span class="p">):</span>
+            <span class="n">itemset</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="p">[</span><span class="n">item</span><span class="p">]</span>
+            <span class="k">yield</span> <span class="n">FrequentItemset</span><span class="p">(</span><span class="n">itemset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span><span class="p">),</span> <span class="n">value_of</span><span class="p">(</span><span class="n">tids</span><span class="p">))</span>
+            <span class="c1"># Extend with later siblings whose intersection is still frequent.</span>
+            <span class="n">extensions</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">other_item</span><span class="p">,</span> <span class="n">tids</span> <span class="o">&amp;</span> <span class="n">other_tids</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">other_item</span><span class="p">,</span> <span class="n">other_tids</span> <span class="ow">in</span> <span class="n">branch</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tids</span> <span class="o">&amp;</span> <span class="n">other_tids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">minimum_support</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">extensions</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="n">grow</span><span class="p">(</span><span class="n">itemset</span><span class="p">,</span> <span class="n">extensions</span><span class="p">)</span>
+
+    <span class="k">yield from</span> <span class="n">grow</span><span class="p">([],</span> <span class="p">[(</span><span class="n">item</span><span class="p">,</span> <span class="n">tidlists</span><span class="p">[</span><span class="n">item</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">frequent_items</span><span class="p">])</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

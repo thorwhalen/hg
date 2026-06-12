@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hg.duplicates &mdash; hg 0.0.7 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=bbaf98b3"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            hg
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/hg.html">hg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/hg/duplicates.html">hg.duplicates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/hg/frequent_itemsets.html">hg.frequent_itemsets</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">hg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">hg.duplicates</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for hg.duplicates</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Duplicate detection and handling — find and remove the largest repeated</span>
+<span class="sd">contiguous blocks in an ordered sequence.</span>
+
+<span class="sd">Simple entry points (progressive disclosure — the common cases are one call):</span>
+
+<span class="sd">- :func:`deduplicate_string_lines` — de-duplicate repeated line-blocks in text.</span>
+<span class="sd">- :func:`deduplicate_sequence` — the same for any indexable sequence of items.</span>
+<span class="sd">- :class:`BlockDeduplicator` — the reusable, configurable form behind both.</span>
+
+<span class="sd">A &quot;block&quot; is a maximal run of consecutive items that occurs more than once; the</span>
+<span class="sd">first occurrence is kept and later ones are removed.</span>
+
+<span class="sd">&gt;&gt;&gt; text = &quot;A\nB\nA\nB\nC&quot;</span>
+<span class="sd">&gt;&gt;&gt; final_text, removed = deduplicate_string_lines(text, min_block_size=2)</span>
+<span class="sd">&gt;&gt;&gt; print(final_text)</span>
+<span class="sd">A</span>
+<span class="sd">B</span>
+<span class="sd">C</span>
+<span class="sd">&gt;&gt;&gt; removed</span>
+<span class="sd">[RemovedBlock(removed_start=2, length=2, block_items=[&#39;A&#39;, &#39;B&#39;])]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="n">DFLT_MIN_BLOCK_SIZE</span> <span class="o">=</span> <span class="mi">5</span>
+
+
+<div class="viewcode-block" id="RemovedBlock">
+<a class="viewcode-back" href="../../module_docs/hg/duplicates.html#hg.duplicates.RemovedBlock">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RemovedBlock</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A contiguous block that was removed as a duplicate.</span>
+
+<span class="sd">    - ``removed_start``: index (in the original sequence) where the removed</span>
+<span class="sd">      occurrence began.</span>
+<span class="sd">    - ``length``: number of items in the block.</span>
+<span class="sd">    - ``block_items``: the actual items of the block (taken from the first,</span>
+<span class="sd">      retained, occurrence).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">removed_start</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">length</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">block_items</span><span class="p">:</span> <span class="nb">list</span></div>
+
+
+
+<div class="viewcode-block" id="BlockDeduplicator">
+<a class="viewcode-back" href="../../module_docs/hg/duplicates.html#hg.duplicates.BlockDeduplicator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlockDeduplicator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A generic tool that finds repeated blocks in a sequence of items,</span>
+<span class="sd">    then removes duplicate occurrences (retaining the first occurrence).</span>
+<span class="sd">    It uses an initial block size for detection and extends the blocks</span>
+<span class="sd">    to find the largest repeated sequences.</span>
+
+<span class="sd">    Example of usage:</span>
+
+<span class="sd">    &gt;&gt;&gt; dedup = BlockDeduplicator(min_block_size=2)</span>
+<span class="sd">    &gt;&gt;&gt; seq = [10, 20, 10, 20, 30]</span>
+<span class="sd">    &gt;&gt;&gt; deduped, removed = dedup.deduplicate_sequence(seq)</span>
+<span class="sd">    &gt;&gt;&gt; deduped</span>
+<span class="sd">    [10, 20, 30]</span>
+<span class="sd">    &gt;&gt;&gt; removed</span>
+<span class="sd">    [RemovedBlock(removed_start=2, length=2, block_items=[10, 20])]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">min_block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MIN_BLOCK_SIZE</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param min_block_size:  The size (of the sequence) for initial block match.</span>
+<span class="sd">        :param key:             A function that maps each item to a</span>
+<span class="sd">                                comparable/hashable value. Defaults to identity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_block_size</span> <span class="o">=</span> <span class="n">min_block_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the key values for each item in the sequence.</span>
+<span class="sd">        This allows us to compare or hash items efficiently.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_find_exact_size_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_keys</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find all repeated blocks of EXACTLY self.min_block_size in the key sequence.</span>
+
+<span class="sd">        Returns a list of (block_signature, [start_indices]) pairs:</span>
+<span class="sd">          - block_signature: tuple of length min_block_size (the keyed items)</span>
+<span class="sd">          - [start_indices]: list of positions where that signature appears</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_keys</span><span class="p">)</span>
+        <span class="n">signature_map</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_block_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">block_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">item_keys</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_block_size</span><span class="p">])</span>
+            <span class="n">signature_map</span><span class="p">[</span><span class="n">block_tuple</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="c1"># Keep only those signatures that appear at least twice</span>
+        <span class="n">repeated</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sig</span><span class="p">,</span> <span class="n">starts</span> <span class="ow">in</span> <span class="n">signature_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">repeated</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sig</span><span class="p">,</span> <span class="n">starts</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">repeated</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extend_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_keys</span><span class="p">,</span> <span class="n">group_indices</span><span class="p">,</span> <span class="n">current_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempt to extend the repeated block by 1 item if all positions</span>
+<span class="sd">        in group_indices match the next item.</span>
+
+<span class="sd">        :param item_keys:      The keyed sequence of items.</span>
+<span class="sd">        :param group_indices:  All start positions for the repeated block.</span>
+<span class="sd">        :param current_size:   Current size of the repeated block.</span>
+<span class="sd">        :return: new_size      (Either current_size or current_size + 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_keys</span><span class="p">)</span>
+        <span class="c1"># Check if we can add at least one more item for every start index</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">group_indices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">+</span> <span class="n">current_size</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+                <span class="c1"># Out of range for at least one occurrence</span>
+                <span class="k">return</span> <span class="n">current_size</span>
+
+        <span class="c1"># If in range, check if the next keyed item is the same for all starts</span>
+        <span class="n">first_key</span> <span class="o">=</span> <span class="n">item_keys</span><span class="p">[</span><span class="n">group_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">current_size</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">group_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">item_keys</span><span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="n">current_size</span><span class="p">]</span> <span class="o">!=</span> <span class="n">first_key</span><span class="p">:</span>
+                <span class="c1"># mismatch found, can&#39;t extend</span>
+                <span class="k">return</span> <span class="n">current_size</span>
+
+        <span class="c1"># If no mismatches, we can extend by 1</span>
+        <span class="k">return</span> <span class="n">current_size</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_largest_duplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        1) Convert items -&gt; keyed items.</span>
+<span class="sd">        2) Detect repeated blocks of EXACT self.min_block_size.</span>
+<span class="sd">        3) Extend each block to find the largest repeated block.</span>
+<span class="sd">        4) Return a list of dictionaries with:</span>
+<span class="sd">            {</span>
+<span class="sd">              &#39;start_indices&#39;: [...],</span>
+<span class="sd">              &#39;length&#39;: &lt;final block length&gt;,</span>
+<span class="sd">              &#39;block_items&#39;: &lt;the actual items in the block from the first occurrence&gt;,</span>
+<span class="sd">            }</span>
+<span class="sd">           sorted by descending &#39;length&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_keys</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="n">repeated_candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_exact_size_blocks</span><span class="p">(</span><span class="n">item_keys</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block_signature</span><span class="p">,</span> <span class="n">group_indices</span> <span class="ow">in</span> <span class="n">repeated_candidates</span><span class="p">:</span>
+            <span class="n">current_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_block_size</span>
+
+            <span class="c1"># Attempt to extend the block as far as possible</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">new_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extend_block</span><span class="p">(</span><span class="n">item_keys</span><span class="p">,</span> <span class="n">group_indices</span><span class="p">,</span> <span class="n">current_size</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_size</span> <span class="o">==</span> <span class="n">current_size</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">current_size</span> <span class="o">=</span> <span class="n">new_size</span>
+
+            <span class="c1"># Final block info</span>
+            <span class="n">first_start</span> <span class="o">=</span> <span class="n">group_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">block_items</span> <span class="o">=</span> <span class="n">sequence</span><span class="p">[</span><span class="n">first_start</span> <span class="p">:</span> <span class="n">first_start</span> <span class="o">+</span> <span class="n">current_size</span><span class="p">]</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;start_indices&quot;</span><span class="p">:</span> <span class="n">group_indices</span><span class="p">,</span>
+                    <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="n">current_size</span><span class="p">,</span>
+                    <span class="s2">&quot;block_items&quot;</span><span class="p">:</span> <span class="n">block_items</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Sort by largest length first</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+<div class="viewcode-block" id="BlockDeduplicator.deduplicate_sequence">
+<a class="viewcode-back" href="../../module_docs/hg/duplicates.html#hg.duplicates.BlockDeduplicator.deduplicate_sequence">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">deduplicate_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Detect largest duplicate blocks, then remove the second</span>
+<span class="sd">        and subsequent occurrences of each block from &#39;sequence&#39;.</span>
+
+<span class="sd">        :param sequence: A list (or other indexable container) of items.</span>
+<span class="sd">        :returns: ``(deduped_sequence, removed_blocks)``</span>
+<span class="sd">            - deduped_sequence: final list of items after removing duplicates</span>
+<span class="sd">            - removed_blocks: list of :class:`RemovedBlock` with the details of</span>
+<span class="sd">              each removed occurrence</span>
+
+<span class="sd">        &gt;&gt;&gt; dedup = BlockDeduplicator(min_block_size=2)</span>
+<span class="sd">        &gt;&gt;&gt; deduped, removed = dedup.deduplicate_sequence(</span>
+<span class="sd">        ...     [&quot;A&quot;, &quot;B&quot;, &quot;A&quot;, &quot;B&quot;, &quot;C&quot;]</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; deduped</span>
+<span class="sd">        [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; removed</span>
+<span class="sd">        [RemovedBlock(removed_start=2, length=2, block_items=[&#39;A&#39;, &#39;B&#39;])]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">duplicates_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_largest_duplicates</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+
+        <span class="n">removed_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">removed_blocks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Remove duplicates in descending block size order</span>
+        <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">duplicates_info</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;length&quot;</span><span class="p">]</span>
+            <span class="n">starts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;start_indices&quot;</span><span class="p">])</span>  <span class="c1"># ascending for consistency</span>
+
+            <span class="c1"># Keep the first occurrence, remove subsequent ones</span>
+            <span class="n">first_start</span> <span class="o">=</span> <span class="n">starts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">other_start</span> <span class="ow">in</span> <span class="n">starts</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="c1"># Check if these items were already removed or not</span>
+                <span class="n">overlap</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">idx</span> <span class="ow">in</span> <span class="n">removed_indices</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">other_start</span><span class="p">,</span> <span class="n">other_start</span> <span class="o">+</span> <span class="n">length</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">overlap</span><span class="p">:</span>
+                    <span class="c1"># Remove them</span>
+                    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">other_start</span><span class="p">,</span> <span class="n">other_start</span> <span class="o">+</span> <span class="n">length</span><span class="p">):</span>
+                        <span class="n">removed_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+                    <span class="n">removed_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">RemovedBlock</span><span class="p">(</span>
+                            <span class="n">removed_start</span><span class="o">=</span><span class="n">other_start</span><span class="p">,</span>
+                            <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span>
+                            <span class="n">block_items</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;block_items&quot;</span><span class="p">],</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># Build the final sequence</span>
+        <span class="n">deduped_sequence</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">item</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span> <span class="k">if</span> <span class="n">idx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">removed_indices</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">deduped_sequence</span><span class="p">,</span> <span class="n">removed_blocks</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="deduplicate_sequence">
+<a class="viewcode-back" href="../../module_docs/hg/duplicates.html#hg.duplicates.deduplicate_sequence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">deduplicate_sequence</span><span class="p">(</span>
+    <span class="n">sequence</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">min_block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MIN_BLOCK_SIZE</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Functional facade over :class:`BlockDeduplicator`: remove the largest</span>
+<span class="sd">    repeated contiguous blocks from ``sequence``, keeping the first occurrence.</span>
+
+<span class="sd">    Returns ``(deduped_sequence, removed_blocks)`` where ``removed_blocks`` is a</span>
+<span class="sd">    list of :class:`RemovedBlock`.</span>
+
+<span class="sd">    &gt;&gt;&gt; deduped, removed = deduplicate_sequence([1, 2, 1, 2, 3], min_block_size=2)</span>
+<span class="sd">    &gt;&gt;&gt; deduped</span>
+<span class="sd">    [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; removed</span>
+<span class="sd">    [RemovedBlock(removed_start=2, length=2, block_items=[1, 2])]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">deduplicator</span> <span class="o">=</span> <span class="n">BlockDeduplicator</span><span class="p">(</span><span class="n">min_block_size</span><span class="o">=</span><span class="n">min_block_size</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">deduplicator</span><span class="o">.</span><span class="n">deduplicate_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="deduplicate_string_lines">
+<a class="viewcode-back" href="../../module_docs/hg/duplicates.html#hg.duplicates.deduplicate_string_lines">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">deduplicate_string_lines</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">min_block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DFLT_MIN_BLOCK_SIZE</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">,</span>
+    <span class="n">return_final_text</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_removed_blocks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    De-duplicate repeated *line-blocks* in a string by splitting it into lines,</span>
+<span class="sd">    running :func:`deduplicate_sequence`, and re-joining.</span>
+
+<span class="sd">    :param text:             The input string.</span>
+<span class="sd">    :param min_block_size:   The size (in number of lines) for initial block match.</span>
+<span class="sd">    :param key:              Optional key function mapping each line to a</span>
+<span class="sd">                             comparable/hashable value. Defaults to :func:`hash`</span>
+<span class="sd">                             (lines are matched by hash, which is fine for text).</span>
+<span class="sd">    :param return_final_text:    Include the deduplicated text in the result.</span>
+<span class="sd">    :param return_removed_blocks: Include the list of :class:`RemovedBlock`.</span>
+<span class="sd">    :returns:</span>
+<span class="sd">        - both flags true (default): ``(final_text, removed_blocks)``</span>
+<span class="sd">        - only ``return_final_text``: ``final_text``</span>
+<span class="sd">        - only ``return_removed_blocks``: ``removed_blocks``</span>
+<span class="sd">        - neither: ``None``</span>
+
+<span class="sd">    &gt;&gt;&gt; text = &quot;A\nB\nC\nA\nB\nC\nD&quot;</span>
+<span class="sd">    &gt;&gt;&gt; final_text, removed = deduplicate_string_lines(text, min_block_size=3)</span>
+<span class="sd">    &gt;&gt;&gt; print(final_text)</span>
+<span class="sd">    A</span>
+<span class="sd">    B</span>
+<span class="sd">    C</span>
+<span class="sd">    D</span>
+<span class="sd">    &gt;&gt;&gt; removed</span>
+<span class="sd">    [RemovedBlock(removed_start=3, length=3, block_items=[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;])]</span>
+<span class="sd">    &gt;&gt;&gt; deduplicate_string_lines(text, min_block_size=3, return_removed_blocks=False)</span>
+<span class="sd">    &#39;A\nB\nC\nD&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="n">deduped_lines</span><span class="p">,</span> <span class="n">removed_blocks</span> <span class="o">=</span> <span class="n">deduplicate_sequence</span><span class="p">(</span>
+        <span class="n">lines</span><span class="p">,</span> <span class="n">min_block_size</span><span class="o">=</span><span class="n">min_block_size</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span>
+    <span class="p">)</span>
+    <span class="n">final_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">deduped_lines</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_final_text</span> <span class="ow">and</span> <span class="n">return_removed_blocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">final_text</span><span class="p">,</span> <span class="n">removed_blocks</span>
+    <span class="k">if</span> <span class="n">return_final_text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">final_text</span>
+    <span class="k">if</span> <span class="n">return_removed_blocks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">removed_blocks</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

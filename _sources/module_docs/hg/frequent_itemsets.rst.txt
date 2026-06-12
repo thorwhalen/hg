@@ -1,0 +1,4 @@
+hg.frequent_itemsets
+====================
+.. automodule:: hg.frequent_itemsets
+   :members:
