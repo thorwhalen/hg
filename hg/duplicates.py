@@ -1,47 +1,47 @@
 r"""
-Duplicate detection and handling.
+Duplicate detection and handling — find and remove the largest repeated
+contiguous blocks in an ordered sequence.
 
+Simple entry points (progressive disclosure — the common cases are one call):
 
->>> example_text = '''Lorem ipsum
-... dolor sit amet
-... dolor sit amet
-... dolor sit amet
-... Consectetur adipiscing
-... Lorem ipsum
-... dolor sit amet
-... dolor sit amet
-... Consectetur adipiscing
-... Something else
-... '''
->>> final_text, removed = deduplicate_string_lines(example_text, min_block_size=3)
->>> print("=== Deduplicated Lines ===")
-=== Deduplicated Lines ===
+- :func:`deduplicate_string_lines` — de-duplicate repeated line-blocks in text.
+- :func:`deduplicate_sequence` — the same for any indexable sequence of items.
+- :class:`BlockDeduplicator` — the reusable, configurable form behind both.
+
+A "block" is a maximal run of consecutive items that occurs more than once; the
+first occurrence is kept and later ones are removed.
+
+>>> text = "A\nB\nA\nB\nC"
+>>> final_text, removed = deduplicate_string_lines(text, min_block_size=2)
 >>> print(final_text)
-Lorem ipsum
-dolor sit amet
-dolor sit amet
-dolor sit amet
-Consectetur adipiscing
-Consectetur adipiscing
-Something else
->>> print("\n=== Removed Blocks ===")
-<BLANKLINE>
-=== Removed Blocks ===
->>> for block in removed:
-...     print(f"Removed block starting at line {block['removed_start']} with length {block['length']}:")
-...     for item in block['block_items']:
-...         print(f"  {item}")
-...     print()
-Removed block starting at line 5 with length 3:
-  Lorem ipsum
-  dolor sit amet
-  dolor sit amet
-<BLANKLINE>
-
+A
+B
+C
+>>> removed
+[RemovedBlock(removed_start=2, length=2, block_items=['A', 'B'])]
 """
 
-from typing import Callable, Optional, Tuple, List, Dict
 from collections import defaultdict
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+
+DFLT_MIN_BLOCK_SIZE = 5
+
+
+@dataclass(frozen=True)
+class RemovedBlock:
+    """A contiguous block that was removed as a duplicate.
+
+    - ``removed_start``: index (in the original sequence) where the removed
+      occurrence began.
+    - ``length``: number of items in the block.
+    - ``block_items``: the actual items of the block (taken from the first,
+      retained, occurrence).
+    """
+
+    removed_start: int
+    length: int
+    block_items: list
 
 
 class BlockDeduplicator:
@@ -59,11 +59,11 @@ class BlockDeduplicator:
     >>> deduped
     [10, 20, 30]
     >>> removed
-    [{'removed_start': 2, 'length': 2, 'block_items': [10, 20]}]
+    [RemovedBlock(removed_start=2, length=2, block_items=[10, 20])]
 
     """
 
-    def __init__(self, min_block_size=5, key=None):
+    def __init__(self, *, min_block_size: int = DFLT_MIN_BLOCK_SIZE, key: Callable | None = None):
         """
         :param min_block_size:  The size (of the sequence) for initial block match.
         :param key:             A function that maps each item to a
@@ -171,24 +171,25 @@ class BlockDeduplicator:
         results.sort(key=lambda r: r["length"], reverse=True)
         return results
 
-    def deduplicate_sequence(self, sequence):
+    def deduplicate_sequence(self, sequence: Sequence):
         r"""
         Detect largest duplicate blocks, then remove the second
         and subsequent occurrences of each block from 'sequence'.
 
         :param sequence: A list (or other indexable container) of items.
-        :returns: (deduped_sequence, removed_blocks)
+        :returns: ``(deduped_sequence, removed_blocks)``
             - deduped_sequence: final list of items after removing duplicates
-            - removed_blocks: list of removed blocks with details
+            - removed_blocks: list of :class:`RemovedBlock` with the details of
+              each removed occurrence
 
-        >>> text = "Line A\nLine B\nLine A\nLine B\nLine C"
-        >>> final_text, removed = deduplicate_string_lines(text, min_block_size=2)
-        >>> print(final_text)
-        Line A
-        Line B
-        Line C
+        >>> dedup = BlockDeduplicator(min_block_size=2)
+        >>> deduped, removed = dedup.deduplicate_sequence(
+        ...     ["A", "B", "A", "B", "C"]
+        ... )
+        >>> deduped
+        ['A', 'B', 'C']
         >>> removed
-        [{'removed_start': 2, 'length': 2, 'block_items': ['Line A', 'Line B']}]
+        [RemovedBlock(removed_start=2, length=2, block_items=['A', 'B'])]
 
         """
         duplicates_info = self._detect_largest_duplicates(sequence)
@@ -214,11 +215,11 @@ class BlockDeduplicator:
                     for idx in range(other_start, other_start + length):
                         removed_indices.add(idx)
                     removed_blocks.append(
-                        {
-                            "removed_start": other_start,
-                            "length": length,
-                            "block_items": info["block_items"],
-                        }
+                        RemovedBlock(
+                            removed_start=other_start,
+                            length=length,
+                            block_items=info["block_items"],
+                        )
                     )
 
         # Build the final sequence
@@ -228,33 +229,75 @@ class BlockDeduplicator:
         return deduped_sequence, removed_blocks
 
 
+def deduplicate_sequence(
+    sequence: Sequence,
+    *,
+    min_block_size: int = DFLT_MIN_BLOCK_SIZE,
+    key: Callable | None = None,
+):
+    r"""
+    Functional facade over :class:`BlockDeduplicator`: remove the largest
+    repeated contiguous blocks from ``sequence``, keeping the first occurrence.
+
+    Returns ``(deduped_sequence, removed_blocks)`` where ``removed_blocks`` is a
+    list of :class:`RemovedBlock`.
+
+    >>> deduped, removed = deduplicate_sequence([1, 2, 1, 2, 3], min_block_size=2)
+    >>> deduped
+    [1, 2, 3]
+    >>> removed
+    [RemovedBlock(removed_start=2, length=2, block_items=[1, 2])]
+    """
+    deduplicator = BlockDeduplicator(min_block_size=min_block_size, key=key)
+    return deduplicator.deduplicate_sequence(sequence)
+
+
 def deduplicate_string_lines(
     text: str,
-    min_block_size: int = 5,
-    key: Optional[Callable] = hash,
     *,
+    min_block_size: int = DFLT_MIN_BLOCK_SIZE,
+    key: Callable | None = hash,
     return_final_text: bool = True,
-    return_removed_blocks: bool = True
-) -> Tuple[str, List[Dict]]:
-    """
-    Example function demonstrating how to use the generic BlockDeduplicator
-    on a string by splitting it into lines. Returns:
-       - final_text: deduplicated text (lines joined by newline)
-       - removed_blocks: metadata about removed blocks
+    return_removed_blocks: bool = True,
+):
+    r"""
+    De-duplicate repeated *line-blocks* in a string by splitting it into lines,
+    running :func:`deduplicate_sequence`, and re-joining.
 
     :param text:             The input string.
     :param min_block_size:   The size (in number of lines) for initial block match.
-    :param key:              Optional key function mapping each line to a comparable/hashable value.
-                             If None, lines are hashed as-is.
+    :param key:              Optional key function mapping each line to a
+                             comparable/hashable value. Defaults to :func:`hash`
+                             (lines are matched by hash, which is fine for text).
+    :param return_final_text:    Include the deduplicated text in the result.
+    :param return_removed_blocks: Include the list of :class:`RemovedBlock`.
+    :returns:
+        - both flags true (default): ``(final_text, removed_blocks)``
+        - only ``return_final_text``: ``final_text``
+        - only ``return_removed_blocks``: ``removed_blocks``
+        - neither: ``None``
+
+    >>> text = "A\nB\nC\nA\nB\nC\nD"
+    >>> final_text, removed = deduplicate_string_lines(text, min_block_size=3)
+    >>> print(final_text)
+    A
+    B
+    C
+    D
+    >>> removed
+    [RemovedBlock(removed_start=3, length=3, block_items=['A', 'B', 'C'])]
+    >>> deduplicate_string_lines(text, min_block_size=3, return_removed_blocks=False)
+    'A\nB\nC\nD'
     """
     lines = text.splitlines()
-    deduplicator = BlockDeduplicator(min_block_size=min_block_size, key=key)
-    deduped_lines, removed_blocks = deduplicator.deduplicate_sequence(lines)
-    if return_final_text:
-        final_text = "\n".join(deduped_lines)
-        if return_removed_blocks:
-            return final_text, removed_blocks
-        else:
-            return final_text
-    elif return_removed_blocks:
+    deduped_lines, removed_blocks = deduplicate_sequence(
+        lines, min_block_size=min_block_size, key=key
+    )
+    final_text = "\n".join(deduped_lines)
+    if return_final_text and return_removed_blocks:
         return final_text, removed_blocks
+    if return_final_text:
+        return final_text
+    if return_removed_blocks:
+        return removed_blocks
+    return None
