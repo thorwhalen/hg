@@ -10,17 +10,46 @@ version = "0.0.8"
 description = "Homogenous Groups (Duplication detection, Frequent Itemsets, etc.)"
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = []
+license = "MIT"
+license-files = [
+    "LICENSE",
+]
+keywords = [
+    "deduplication",
+    "duplicate-detection",
+    "frequent-itemsets",
+    "eclat",
+    "pattern-mining",
+    "market-basket-analysis",
+    "co-occurrence",
+    "data-mining",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: General",
+]
 authors = [
     { name = "Thor Whalen" },
 ]
 dependencies = []
 
-[project.license]
-text = "MIT"
-
 [project.urls]
 Homepage = "https://github.com/thorwhalen/hg"
+Documentation = "https://thorwhalen.github.io/hg/"
+Repository = "https://github.com/thorwhalen/hg"
+Issues = "https://github.com/thorwhalen/hg/issues"
 
 [project.optional-dependencies]
 dev = [
