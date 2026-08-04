@@ -40,9 +40,9 @@ Find sets of items co-occurring in at least `minimum_support` transactions.
 ```python
 from hg import find_frequent_itemsets
 
-transactions = [['bread', 'milk'], ['bread', 'milk', 'eggs'], ['milk', 'eggs']]
+transactions = [["bread", "milk"], ["bread", "milk", "eggs"], ["milk", "eggs"]]
 for items, support, value in find_frequent_itemsets(transactions, minimum_support=2):
-    ...   # items: list, support: int, value: float
+    ...  # items: list, support: int, value: float
 ```
 
 - Yields `FrequentItemset(items, support, value)` namedtuples (tuple-unpackable).
@@ -53,8 +53,10 @@ for items, support, value in find_frequent_itemsets(transactions, minimum_suppor
   With no `transaction_values`, `value == support`.
 
 ```python
-prices = [4.0, 9.0, 5.0]   # one per transaction
-itemsets = find_frequent_itemsets(transactions, transaction_values=prices, minimum_support=2)
+prices = [4.0, 9.0, 5.0]  # one per transaction
+itemsets = find_frequent_itemsets(
+    transactions, transaction_values=prices, minimum_support=2
+)
 ```
 
 Use for: market-basket / co-occurrence analysis, tag or feature co-occurrence,

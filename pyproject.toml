@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hg"
-version = "0.0.8"
+version = "0.0.9"
 description = "Homogenous Groups (Duplication detection, Frequent Itemsets, etc.)"
 readme = "README.md"
 requires-python = ">=3.10"
