@@ -1,0 +1,22 @@
+# hg
+
+> Homogenous Groups (Duplication detection, Frequent Itemsets, etc.)
+
+
+## Pages
+
+- [hg](index.html.md): Homogenous Groups — find items that recur together.
+- [API reference](api.html.md): | &#96;hg&#96;   | Homogenous Groups — discovering items that recur together.   |
+- [hg](_autosummary/hg.html.md): Homogenous Groups — discovering items that recur together.
+- [hg.duplicates](_autosummary/hg.duplicates.html.md): Duplicate detection and handling — find and remove the largest repeated
+- [hg.frequent_itemsets](_autosummary/hg.frequent_itemsets.html.md): Frequent-itemset mining, augmented so each transaction can carry a numeric
+- [For AI agents](ai-agents.html.md): &#96;hg&#96; ships artifacts for coding agents alongside its code. This page lists
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-22 14:31 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+
+## Optional
+
+- [hg.md](hg.md): Complete documentation in a single file.
+
+## Build
+
+- [build_info.json](build_info.json): build provenance (commit, version, tool versions, whether the docs match the package)

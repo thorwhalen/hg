@@ -1,4 +1,0 @@
-hg
-==
-.. automodule:: hg
-   :members:

@@ -1,142 +1,262 @@
-
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html lang="en" data-accent-color="teal" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to hg’s documentation! &mdash; hg 0.0.8 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>hg</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API reference" href="api.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d88b86f9" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=2ceb65ce" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    
+  <meta property="og:type" content="website"/><meta property="og:title" content="hg"/>
+    <meta name="twitter:card" content="summary"/>
   
-      <script src="_static/jquery.js?v=5d32c60e"></script>
-      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=53b53b71"></script>
+<link rel="alternate" type="text/markdown" href="index.html.md">
+<link rel="describedby" href="llms.txt" type="text/markdown">
+</head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="#">
+      
+      
+      <strong>hg</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/thorwhalen/hg" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="_autosummary/hg.html">hg</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/hg.duplicates.html">hg.duplicates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/hg.frequent_itemsets.html">hg.frequent_itemsets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ai-agents.html">For AI agents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#duplication-detection">Duplication detection</a></li>
+<li><a class="reference internal" href="#frequent-itemset-mining">Frequent-itemset mining</a><ul>
+<li><a class="reference internal" href="#value-weighted-itemsets">Value-weighted itemsets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#when-to-use-which">When to use which</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="#"><span itemprop="name">hg</span></a>
+        <meta itemprop="position" content="1" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue dark-code" role="main">
+          <!-- generated by epythet -->
+<section id="hg">
+<h1>hg<a class="headerlink" href="#hg" title="Link to this heading">#</a></h1>
+<p>Homogenous Groups — find items that recur together.</p>
+<p>To install: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">hg</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">hg</span></code> bundles two complementary ways of discovering repeated structure in data,
+with no third-party dependencies (pure standard library):</p>
+<ul class="simple">
+<li><p><strong>Duplication detection</strong> — find and remove the largest repeated <em>contiguous</em>
+blocks in an ordered sequence (e.g. repeated line-blocks in text).</p></li>
+<li><p><strong>Frequent-itemset mining</strong> — find sets of items that <em>co-occur</em> across
+transactions, optionally weighted by a per-transaction value.</p></li>
+</ul>
+<section id="duplication-detection">
+<h2>Duplication detection<a class="headerlink" href="#duplication-detection" title="Link to this heading">#</a></h2>
+<p>The simplest case — de-duplicate repeated line-blocks in text, keeping the first
+occurrence:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">hg</span><span class="w"> </span><span class="kn">import</span> <span class="n">deduplicate_string_lines</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s2">"A</span><span class="se">\n</span><span class="s2">B</span><span class="se">\n</span><span class="s2">C</span><span class="se">\n</span><span class="s2">A</span><span class="se">\n</span><span class="s2">B</span><span class="se">\n</span><span class="s2">C</span><span class="se">\n</span><span class="s2">D"</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">final_text</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">deduplicate_string_lines</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">min_block_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">final_text</span><span class="p">)</span>
+</span><span data-line="5"><span class="go">A</span>
+</span><span data-line="6"><span class="go">B</span>
+</span><span data-line="7"><span class="go">C</span>
+</span><span data-line="8"><span class="go">D</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="n">removed</span>
+</span><span data-line="10"><span class="go">[RemovedBlock(removed_start=3, length=3, block_items=['A', 'B', 'C'])]</span>
+</span><span data-line="11">
+</span></pre></div>
+</div>
+<p>The same works on any sequence of items via <code class="docutils literal notranslate"><span class="pre">deduplicate_sequence</span></code> (or the
+reusable <code class="docutils literal notranslate"><span class="pre">BlockDeduplicator</span></code>), with an optional <code class="docutils literal notranslate"><span class="pre">key</span></code> to control how items are
+compared:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">hg</span><span class="w"> </span><span class="kn">import</span> <span class="n">deduplicate_sequence</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span><span class="p">,</span> <span class="n">removed</span> <span class="o">=</span> <span class="n">deduplicate_sequence</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">min_block_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">deduped</span>
+</span><span data-line="4"><span class="go">[1, 2, 3]</span>
+</span><span data-line="5">
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">min_block_size</span></code> is the smallest repeated run to detect; detected blocks are
+then greedily extended to the largest repeated run.</p>
+</section>
+<section id="frequent-itemset-mining">
+<h2>Frequent-itemset mining<a class="headerlink" href="#frequent-itemset-mining" title="Link to this heading">#</a></h2>
+<p>Find sets of items that appear together in at least <code class="docutils literal notranslate"><span class="pre">minimum_support</span></code>
+transactions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">hg</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_frequent_itemsets</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">transactions</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="3"><span class="gp">... </span>    <span class="p">[</span><span class="s1">'bread'</span><span class="p">,</span> <span class="s1">'milk'</span><span class="p">],</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="p">[</span><span class="s1">'bread'</span><span class="p">,</span> <span class="s1">'milk'</span><span class="p">,</span> <span class="s1">'eggs'</span><span class="p">],</span>
+</span><span data-line="5"><span class="gp">... </span>    <span class="p">[</span><span class="s1">'milk'</span><span class="p">,</span> <span class="s1">'eggs'</span><span class="p">],</span>
+</span><span data-line="6"><span class="gp">... </span>    <span class="p">[</span><span class="s1">'bread'</span><span class="p">,</span> <span class="s1">'butter'</span><span class="p">],</span>
+</span><span data-line="7"><span class="gp">... </span><span class="p">]</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">itemset</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span data-line="9"><span class="gp">... </span>    <span class="n">find_frequent_itemsets</span><span class="p">(</span><span class="n">transactions</span><span class="p">,</span> <span class="n">minimum_support</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+</span><span data-line="10"><span class="gp">... </span>    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">it</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">it</span><span class="o">.</span><span class="n">support</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">items</span><span class="p">)),</span>
+</span><span data-line="11"><span class="gp">... </span><span class="p">):</span>
+</span><span data-line="12"><span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">itemset</span><span class="o">.</span><span class="n">items</span><span class="p">),</span> <span class="n">itemset</span><span class="o">.</span><span class="n">support</span><span class="p">)</span>
+</span><span data-line="13"><span class="go">['bread'] 3</span>
+</span><span data-line="14"><span class="go">['milk'] 3</span>
+</span><span data-line="15"><span class="go">['bread', 'milk'] 2</span>
+</span><span data-line="16"><span class="go">['eggs'] 2</span>
+</span><span data-line="17"><span class="go">['eggs', 'milk'] 2</span>
+</span><span data-line="18">
+</span></pre></div>
+</div>
+<section id="value-weighted-itemsets">
+<h3>Value-weighted itemsets<a class="headerlink" href="#value-weighted-itemsets" title="Link to this heading">#</a></h3>
+<p>The distinguishing feature: pass <code class="docutils literal notranslate"><span class="pre">transaction_values</span></code> to accumulate an arbitrary
+per-transaction quantity (revenue, duration, …) alongside the count. Each
+result is a <code class="docutils literal notranslate"><span class="pre">FrequentItemset(items,</span> <span class="pre">support,</span> <span class="pre">value)</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">prices</span> <span class="o">=</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">]</span>   <span class="c1"># one value per transaction</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">by_value</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="3"><span class="gp">... </span>    <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">items</span><span class="p">)):</span> <span class="n">it</span><span class="o">.</span><span class="n">value</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">find_frequent_itemsets</span><span class="p">(</span>
+</span><span data-line="5"><span class="gp">... </span>        <span class="n">transactions</span><span class="p">,</span> <span class="n">transaction_values</span><span class="o">=</span><span class="n">prices</span><span class="p">,</span> <span class="n">minimum_support</span><span class="o">=</span><span class="mi">2</span>
+</span><span data-line="6"><span class="gp">... </span>    <span class="p">)</span>
+</span><span data-line="7"><span class="gp">... </span><span class="p">}</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="n">by_value</span><span class="p">[(</span><span class="s1">'bread'</span><span class="p">,</span> <span class="s1">'milk'</span><span class="p">)]</span>     <span class="c1"># baskets 0 (4.0) and 1 (9.0)</span>
+</span><span data-line="9"><span class="go">13.0</span>
+</span><span data-line="10">
+</span></pre></div>
+</div>
+<p>With no <code class="docutils literal notranslate"><span class="pre">transaction_values</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code> simply equals <code class="docutils literal notranslate"><span class="pre">support</span></code>.</p>
+</section>
+</section>
+<section id="when-to-use-which">
+<h2>When to use which<a class="headerlink" href="#when-to-use-which" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Reach for <strong>duplication detection</strong> when <em>order matters</em> and you want to
+collapse repeated runs (deduping logs, transcripts, generated text).</p></li>
+<li><p>Reach for <strong>frequent-itemset mining</strong> when <em>co-occurrence</em> matters and order
+does not (market-basket analysis, tag/feature co-occurrence), especially when
+you want to weight occurrences by a value.</p></li>
+</ul>
+<p class="epythet-aggregates">This documentation as a single file: <a href="hg.md">hg.md</a> (Markdown, for agents).</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 14:31 UTC from <a href="https://github.com/thorwhalen/hg/commit/9ad945ebe3cd2b0097a4271e07880c11ae6830e7">9ad945e</a> (main) · hg 0.0.9 · <a href="about-this-build.html">about this build</a></p>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-next">
+    <a href="api.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">API reference</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright">
+  <p>
+    Made with
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials">
+  <a href="https://github.com/thorwhalen/hg" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=f7cdbf68"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-      <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-      <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="hg" href="module_docs/hg.html" /> 
-</head>
-
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="#" class="icon icon-home">
-            hg
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/hg.html">hg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/hg/duplicates.html">hg.duplicates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/hg/frequent_itemsets.html">hg.frequent_itemsets</a></li>
-</ul>
-
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">hg</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to hg’s documentation!</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  <section id="welcome-to-hg-s-documentation">
-<h1>Welcome to hg’s documentation!<a class="headerlink" href="#welcome-to-hg-s-documentation" title="Link to this heading"></a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/hg.html">hg</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/hg/duplicates.html">hg.duplicates</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/hg/duplicates.html#hg.duplicates.BlockDeduplicator"><code class="docutils literal notranslate"><span class="pre">BlockDeduplicator</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/hg/duplicates.html#hg.duplicates.RemovedBlock"><code class="docutils literal notranslate"><span class="pre">RemovedBlock</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/hg/duplicates.html#hg.duplicates.deduplicate_sequence"><code class="docutils literal notranslate"><span class="pre">deduplicate_sequence()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/hg/duplicates.html#hg.duplicates.deduplicate_string_lines"><code class="docutils literal notranslate"><span class="pre">deduplicate_string_lines()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="module_docs/hg/frequent_itemsets.html">hg.frequent_itemsets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/hg/frequent_itemsets.html#hg.frequent_itemsets.FrequentItemset"><code class="docutils literal notranslate"><span class="pre">FrequentItemset</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_docs/hg/frequent_itemsets.html#hg.frequent_itemsets.find_frequent_itemsets"><code class="docutils literal notranslate"><span class="pre">find_frequent_itemsets()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
-<p>Release: 0.0.8</p>
-<p>Last change: Aug 04, 2026</p>
-</section>
-
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="module_docs/hg.html" class="btn btn-neutral float-right" title="hg" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p></p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+      <script src="_static/copybutton.js?v=fd10adb8"></script>
+      <script src="_static/shibuya.js?v=50760d75"></script></body>
 </html>

@@ -1,7 +1,0 @@
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   module_docs/hg
-   module_docs/hg/duplicates
-   module_docs/hg/frequent_itemsets

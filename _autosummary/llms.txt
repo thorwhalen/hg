@@ -1,0 +1,14 @@
+# hg
+
+> Homogenous Groups (Duplication detection, Frequent Itemsets, etc.)
+
+
+## Pages in this subsection
+
+- [hg](hg.html.md): Homogenous Groups — discovering items that recur together.
+- [hg.duplicates](hg.duplicates.html.md): Duplicate detection and handling — find and remove the largest repeated
+- [hg.frequent_itemsets](hg.frequent_itemsets.html.md): Frequent-itemset mining, augmented so each transaction can carry a numeric
+
+## Optional
+
+- [Top-level llms.txt](../llms.txt): Complete documentation index.

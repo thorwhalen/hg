@@ -1,0 +1,18 @@
+hg.frequent\_itemsets
+=====================
+
+.. automodule:: hg.frequent_itemsets
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      find_frequent_itemsets
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      FrequentItemset
+   

@@ -1,0 +1,14 @@
+﻿hg
+==
+
+.. automodule:: hg
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   duplicates
+   frequent_itemsets

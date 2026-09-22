@@ -1,0 +1,20 @@
+hg.duplicates
+=============
+
+.. automodule:: hg.duplicates
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      deduplicate_sequence
+      deduplicate_string_lines
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BlockDeduplicator
+      RemovedBlock
+   

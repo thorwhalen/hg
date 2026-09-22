@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-09-22T14:31:41Z",
+  "package": {
+    "name": "hg",
+    "version": "0.0.9",
+    "display_name": "hg",
+    "source": "pyproject.toml"
+  },
+  "git": {
+    "available": true,
+    "commit": "9ad945ebe3cd2b0097a4271e07880c11ae6830e7",
+    "short_commit": "9ad945e",
+    "branch": "main",
+    "tags": [],
+    "dirty": false,
+    "remote_url": "https://github.com/thorwhalen/hg",
+    "commit_url": "https://github.com/thorwhalen/hg/commit/9ad945ebe3cd2b0097a4271e07880c11ae6830e7",
+    "error": null
+  },
+  "ci": {
+    "provider": "github",
+    "repository": "thorwhalen/hg",
+    "sha": "9ad945ebe3cd2b0097a4271e07880c11ae6830e7",
+    "sha_in_history": true,
+    "ref": "refs/heads/main",
+    "ref_name": "main",
+    "run_id": "35740698358",
+    "run_url": "https://github.com/thorwhalen/hg/actions/runs/35740698358",
+    "server_url": "https://github.com"
+  },
+  "tools": {
+    "epythet": "0.2.12",
+    "sphinx": "9.1.0",
+    "docutils": "0.22.4",
+    "python": "3.12.14"
+  },
+  "config": {
+    "theme": "auto",
+    "html_theme": "shibuya",
+    "accent": "#006e59",
+    "mode": "auto",
+    "api_generator": "autosummary",
+    "ignore": [
+      "tests/",
+      "scrap/",
+      "examples/"
+    ],
+    "agent_outputs": true,
+    "aggregates": [
+      "md"
+    ],
+    "ai_artifacts": true,
+    "provenance": true,
+    "docs_dir": "docsrc"
+  },
+  "site": {
+    "modules_documented": 3,
+    "objects_documented": 10
+  },
+  "pypi": {
+    "checked": true,
+    "latest": "0.0.10",
+    "relation": "behind",
+    "error": null
+  },
+  "reproduce": "git clone https://github.com/thorwhalen/hg && cd hg\ngit checkout 9ad945ebe3cd2b0097a4271e07880c11ae6830e7\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "warnings": [],
+  "alignment": {
+    "aligned": false,
+    "notes": [
+      "The documented version (0.0.9) is behind the latest release on PyPI (0.0.10): `pip install hg` gives newer code than these docs describe."
+    ]
+  }
+}
